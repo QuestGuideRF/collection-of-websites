@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Площадка для Визуализации Данных</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        h1 {
+            font-size: 2em;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-badge {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid #a855f7;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #c084fc;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            background: rgba(168, 85, 247, 0.3);
+            border: 1px solid #a855f7;
+            color: #e9d5ff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+        .btn:hover {
+            background: rgba(168, 85, 247, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+        .sidebar {
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .step {
+            margin-bottom: 30px;
+        }
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+        .step-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #e9d5ff;
+        }
+        .upload-area {
+            border: 2px dashed #a855f7;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(168, 85, 247, 0.1);
+            margin-bottom: 15px;
+        }
+        .upload-area:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #c084fc;
+        }
+        .upload-area.dragover {
+            background: rgba(168, 85, 247, 0.3);
+            border-color: #ec4899;
+        }
+        .upload-text {
+            color: #c084fc;
+            margin-bottom: 5px;
+        }
+        .upload-hint {
+            font-size: 0.85em;
+            color: #a78bfa;
+        }
+        #fileInput {
+            display: none;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+        .select-group {
+            margin-bottom: 15px;
+        }
+        .select-group label {
+            display: block;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        .select-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+        .select-group select:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+        .datasets-list {
+            margin-top: 15px;
+        }
+        .dataset-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .dataset-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .dataset-item label {
+            flex: 1;
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #475569;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #fff;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .color-item label {
+            flex: 1;
+            color: #cbd5e1;
+            font-size: 0.9em;
+        }
+        .chart-container {
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 1.2em;
+            color: #e9d5ff;
+        }
+        .chart-type-badge {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid #a855f7;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #c084fc;
+        }
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+        .tip {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #a855f7;
+            color: #cbd5e1;
+            font-size: 0.9em;
+        }
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #94a3b8;
+            font-size: 1.1em;
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Площадка для Визуализации Данных</h1>
+            <span class="nav-badge">CSV → Графики</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="saveBtn">
+                <span>💾</span> Сохранить как изображение
+            </button>
+            <button class="btn" id="resetBtn">
+                <span>↻</span> Сброс
+            </button>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Загрузить CSV
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-text">Перетащите CSV сюда или нажмите для выбора</div>
+                    <div class="upload-hint">Первая строка по умолчанию считается заголовком</div>
+                </div>
+                <input type="file" id="fileInput" accept=".csv">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hasHeader" checked>
+                    <label for="hasHeader">Есть строка заголовка</label>
+                </div>
+                <div class="select-group">
+                    <label for="delimiter">Разделитель</label>
+                    <select id="delimiter">
+                        <option value="auto">Авто</option>
+                        <option value=",">Запятая (,)</option>
+                        <option value=";">Точка с запятой (;)</option>
+                        <option value="\t">Табуляция</option>
+                    </select>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Выбрать график и колонки
+                </div>
+                <div class="select-group">
+                    <label for="chartType">Тип графика</label>
+                    <select id="chartType">
+                        <option value="line">Линейный</option>
+                        <option value="bar">Столбчатый</option>
+                        <option value="pie">Круговой</option>
+                        <option value="doughnut">Кольцевой</option>
+                        <option value="radar">Радарный</option>
+                    </select>
+                </div>
+                <div class="select-group">
+                    <label for="labelColumn">Колонка меток</label>
+                    <select id="labelColumn">
+                        <option value="">-- Выберите --</option>
+                    </select>
+                </div>
+                <div class="datasets-list" id="datasetsList">
+                    <div style="color: #94a3b8; font-size: 0.9em; margin-top: 10px;">
+                        Датасеты (числовые колонки)
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Внешний вид
+                </div>
+                <div id="colorsList">
+                    <div style="color: #94a3b8; font-size: 0.9em; margin-bottom: 10px;">
+                        Цвета датасетов
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title" id="chartTitle">Загружен набор данных по умолчанию. Вы можете заменить его, загрузив CSV.</div>
+                <div class="chart-type-badge" id="chartTypeBadge">Линейный график</div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chartCanvas"></canvas>
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    Загрузите CSV файл для начала работы
+                </div>
+            </div>
+            <div class="tip">
+                <strong>Подсказка:</strong> Вы можете настроить цвета датасетов и экспортировать график как PNG изображение.
+            </div>
+        </div>
+    </div>
+    <script>
+        let chart = null;
+        let csvData = null;
+        let columns = [];
+        let numericColumns = [];
+        let selectedDatasets = new Set();
+        let datasetColors = {};
+        let defaultColors = [
+            '#fbbf24', '#22c55e', '#3b82f6', '#a855f7',
+            '#ec4899', '#f59e0b', '#10b981', '#6366f1'
+        ];
+        const defaultData = {
+            labels: ['2024-01-31', '2024-02-29', '2024-03-31', '2024-04-30',
+                     '2024-05-31', '2024-06-30', '2024-07-31', '2024-08-31',
+                     '2024-09-30', '2024-10-31', '2024-11-30'],
+            datasets: [
+                {
+                    label: 'Продажи',
+                    data: [1200, 1900, 1500, 1800, 1600, 1400, 1700, 1900, 1100, 1300, 1500],
+                    borderColor: '#fbbf24',
+                    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Прибыль',
+                    data: [300, 400, 250, 350, 280, 320, 380, 400, 200, 250, 300],
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        };
+        function init() {
+            setupEventListeners();
+            loadDefaultData();
+        }
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const hasHeader = document.getElementById('hasHeader');
+            const delimiter = document.getElementById('delimiter');
+            const chartType = document.getElementById('chartType');
+            const labelColumn = document.getElementById('labelColumn');
+            const saveBtn = document.getElementById('saveBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            hasHeader.addEventListener('change', () => {
+                if (csvData) parseCSV(csvData);
+            });
+            delimiter.addEventListener('change', () => {
+                if (csvData) parseCSV(csvData);
+            });
+            chartType.addEventListener('change', updateChart);
+            labelColumn.addEventListener('change', updateChart);
+            saveBtn.addEventListener('click', saveAsImage);
+            resetBtn.addEventListener('click', reset);
+        }
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                readFile(file);
+            }
+        }
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                readFile(file);
+            }
+        }
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                csvData = e.target.result;
+                parseCSV(csvData);
+            };
+            reader.readAsText(file);
+        }
+        function parseCSV(text) {
+            const hasHeader = document.getElementById('hasHeader').checked;
+            const delimiterSelect = document.getElementById('delimiter');
+            let delimiter = delimiterSelect.value;
+            if (delimiter === 'auto') {
+                delimiter = detectDelimiter(text);
+            }
+            const lines = text.split('\n').filter(line => line.trim());
+            const rows = lines.map(line => {
+                if (delimiter === '\t') {
+                    return line.split('\t');
+                }
+                return line.split(delimiter).map(cell => cell.trim().replace(/^"|"$/g, ''));
+            });
+            if (rows.length === 0) return;
+            if (hasHeader) {
+                columns = rows[0];
+                rows.shift();
+            } else {
+                columns = rows[0].map((_, i) => `Колонка ${i + 1}`);
+            }
+            numericColumns = [];
+            for (let i = 0; i < columns.length; i++) {
+                const sampleValues = rows.slice(0, Math.min(10, rows.length))
+                    .map(row => row[i])
+                    .filter(val => val !== undefined && val !== '');
+                if (sampleValues.length > 0) {
+                    const isNumeric = sampleValues.every(val => !isNaN(parseFloat(val)));
+                    if (isNumeric) {
+                        numericColumns.push(i);
+                    }
+                }
+            }
+            updateLabelColumnSelect();
+            updateDatasetsList();
+            updateColorsList();
+            if (document.getElementById('labelColumn').value === '' && columns.length > 0) {
+                let labelColIndex = -1;
+                for (let i = 0; i < columns.length; i++) {
+                    if (!numericColumns.includes(i)) {
+                        labelColIndex = i;
+                        break;
+                    }
+                }
+                if (labelColIndex >= 0) {
+                    document.getElementById('labelColumn').value = labelColIndex;
+                }
+            }
+            selectedDatasets.clear();
+            numericColumns.forEach(col => selectedDatasets.add(col));
+            updateDatasetsList();
+            updateChart();
+        }
+        function detectDelimiter(text) {
+            const delimiters = [',', ';', '\t'];
+            const firstLine = text.split('\n')[0];
+            let maxCount = 0;
+            let detected = ',';
+            for (const delim of delimiters) {
+                const count = (firstLine.match(new RegExp('\\' + delim, 'g')) || []).length;
+                if (count > maxCount) {
+                    maxCount = count;
+                    detected = delim;
+                }
+            }
+            return detected;
+        }
+        function updateLabelColumnSelect() {
+            const select = document.getElementById('labelColumn');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">-- Выберите --</option>';
+            columns.forEach((col, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = col;
+                select.appendChild(option);
+            });
+            if (currentValue !== '') {
+                select.value = currentValue;
+            }
+        }
+        function updateDatasetsList() {
+            const list = document.getElementById('datasetsList');
+            list.innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; margin-top: 10px;">Датасеты (числовые колонки)</div>';
+            numericColumns.forEach((colIndex, idx) => {
+                const item = document.createElement('div');
+                item.className = 'dataset-item';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `набор данных-${colIndex}`;
+                checkbox.checked = selectedDatasets.has(colIndex);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        selectedDatasets.add(colIndex);
+                    } else {
+                        selectedDatasets.delete(colIndex);
+                    }
+                    updateChart();
+                });
+                const label = document.createElement('label');
+                label.htmlFor = `набор данных-${colIndex}`;
+                label.textContent = columns[colIndex];
+                const colorPicker = document.createElement('input');
+                colorPicker.type = 'color';
+                colorPicker.className = 'color-picker';
+                const color = datasetColors[colIndex] || defaultColors[idx % defaultColors.length];
+                colorPicker.value = color;
+                colorPicker.addEventListener('change', (e) => {
+                    datasetColors[colIndex] = e.target.value;
+                    updateChart();
+                });
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                item.appendChild(colorPicker);
+                list.appendChild(item);
+            });
+        }
+        function updateColorsList() {
+            const list = document.getElementById('colorsList');
+            list.innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; margin-bottom: 10px;">Цвета датасетов</div>';
+            Array.from(selectedDatasets).forEach((colIndex, idx) => {
+                const item = document.createElement('div');
+                item.className = 'color-item';
+                const label = document.createElement('label');
+                label.textContent = columns[colIndex];
+                const colorPicker = document.createElement('input');
+                colorPicker.type = 'color';
+                colorPicker.className = 'color-picker';
+                const color = datasetColors[colIndex] || defaultColors[idx % defaultColors.length];
+                colorPicker.value = color;
+                colorPicker.addEventListener('change', (e) => {
+                    datasetColors[colIndex] = e.target.value;
+                    updateChart();
+                });
+                item.appendChild(label);
+                item.appendChild(colorPicker);
+                list.appendChild(item);
+            });
+        }
+        function updateChart() {
+            const chartType = document.getElementById('chartType').value;
+            const labelColumnIndex = parseInt(document.getElementById('labelColumn').value);
+            const chartTypeNames = {
+                'line': 'Линейный график',
+                'bar': 'Столбчатый график',
+                'pie': 'Круговой график',
+                'doughnut': 'Кольцевой график',
+                'radar': 'Радарный график'
+            };
+            document.getElementById('chartTypeBadge').textContent = chartTypeNames[chartType] || 'График';
+            let chartData;
+            if (csvData && columns.length > 0 && selectedDatasets.size > 0) {
+                const lines = csvData.split('\n').filter(line => line.trim());
+                const hasHeader = document.getElementById('hasHeader').checked;
+                const delimiterSelect = document.getElementById('delimiter');
+                let delimiter = delimiterSelect.value === 'auto' ? detectDelimiter(csvData) : delimiterSelect.value;
+                const rows = lines.map(line => {
+                    if (delimiter === '\t') {
+                        return line.split('\t');
+                    }
+                    return line.split(delimiter).map(cell => cell.trim().replace(/^"|"$/g, ''));
+                });
+                if (hasHeader) rows.shift();
+                const labels = labelColumnIndex >= 0 && labelColumnIndex < columns.length
+                    ? rows.map(row => row[labelColumnIndex] || '')
+                    : rows.map((_, i) => `Точка ${i + 1}`);
+                const datasets = Array.from(selectedDatasets).map((colIndex, idx) => {
+                    const color = datasetColors[colIndex] || defaultColors[idx % defaultColors.length];
+                    const data = rows.map(row => parseFloat(row[colIndex]) || 0);
+                    const baseConfig = {
+                        label: columns[colIndex],
+                        data: data,
+                        backgroundColor: chartType === 'pie' || chartType === 'doughnut'
+                            ? color + '80'
+                            : color + '20',
+                        borderColor: color,
+                    };
+                    if (chartType === 'line') {
+                        baseConfig.tension = 0.4;
+                        baseConfig.fill = true;
+                    }
+                    return baseConfig;
+                });
+                chartData = { labels, datasets };
+                document.getElementById('chartTitle').textContent = 'Визуализация данных из CSV';
+            } else {
+                chartData = defaultData;
+                document.getElementById('chartTitle').textContent = 'Загружен набор данных по умолчанию. Вы можете заменить его, загрузив CSV.';
+            }
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            if (chart) {
+                chart.destroy();
+            }
+            const config = {
+                type: chartType,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e9d5ff',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 30, 60, 0.95)',
+                            titleColor: '#e9d5ff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#a855f7',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'radar' ? {
+                        x: {
+                            ticks: {
+                                color: '#cbd5e1',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                color: 'rgba(168, 85, 247, 0.2)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#cbd5e1'
+                            },
+                            grid: {
+                                color: 'rgba(168, 85, 247, 0.2)'
+                            }
+                        }
+                    } : {}
+                }
+            };
+            chart = new Chart(ctx, config);
+            document.getElementById('emptyState').style.display = 'none';
+        }
+        function loadDefaultData() {
+            updateChart();
+        }
+        function saveAsImage() {
+            if (!chart) return;
+            const url = chart.toBase64Image();
+            const link = document.createElement('a');
+            link.download = 'chart.png';
+            link.href = url;
+            link.click();
+        }
+        function reset() {
+            csvData = null;
+            columns = [];
+            numericColumns = [];
+            selectedDatasets.clear();
+            datasetColors = {};
+            document.getElementById('fileInput').value = '';
+            document.getElementById('hasHeader').checked = true;
+            document.getElementById('delimiter').value = 'auto';
+            document.getElementById('chartType').value = 'line';
+            document.getElementById('labelColumn').innerHTML = '<option value="">-- Выберите --</option>';
+            document.getElementById('datasetsList').innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; margin-top: 10px;">Датасеты (числовые колонки)</div>';
+            document.getElementById('colorsList').innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; margin-bottom: 10px;">Цвета датасетов</div>';
+            ЗагрузитьДанныеПо умолчанию();
+        }
+        инициализация();
+    </script>
+</body>
+</html>

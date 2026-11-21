@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Совпадение Цветов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        .game-container {
+            background: #2a2a2a;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+        }
+        .stat-box {
+            background: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.8em;
+        }
+        .stat-value {
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .title {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 3px;
+        }
+        .start-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .start-btn:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+        .start-btn:active {
+            transform: translateY(0);
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #475569;
+            background: #1a1a1a;
+            color: #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+        .mode-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .mode-btn:hover:not(:disabled) {
+            border-color: #64748b;
+        }
+        .mode-btn:disabled {
+            cursor: not-allowed;
+        }
+        .instructions {
+            text-align: center;
+            margin: 20px 0 40px;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+        .word-display {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 5em;
+            font-weight: bold;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 5px;
+        }
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .color-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .color-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        .color-btn:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .color-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .color-red { background: #ef4444; }
+        .color-blue { background: #3b82f6; }
+        .color-green { background: #22c55e; }
+        .color-yellow { background: #eab308; }
+        .color-purple { background: #a855f7; }
+        .color-orange { background: #f97316; }
+        .color-pink { background: #ec4899; }
+        .color-brown { background: #a16207; }
+        .color-black { background: #1a1a1a; border: 2px solid #444; }
+        .color-gray { background: #6b7280; }
+        .game-over {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 1.5em;
+            color: #22c55e;
+        }
+        @media (max-width: 768px) {
+            .buttons-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .word-display {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Счёт</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Время</div>
+                    <div class="stat-value" id="time">30.0</div>
+                </div>
+            </div>
+            <h1 class="title">СОВПАДЕНИЕ ЦВЕТОВ</h1>
+            <button class="start-btn" id="startBtn">Старт</button>
+        </div>
+        <div class="mode-selector">
+            <button class="mode-btn active" id="modeWordBtn" data-mode="word">
+                По слову (выбери цвет который написан)
+            </button>
+            <button class="mode-btn" id="modeColorBtn" data-mode="color">
+                По цвету (выбери цвет текста)
+            </button>
+        </div>
+        <div class="instructions" id="instructions">
+            Нажмите кнопку с цветом, который написан в слове.
+        </div>
+        <div class="word-display" id="wordDisplay"></div>
+        <div class="buttons-grid" id="buttonsGrid"></div>
+        <div class="game-over" id="gameOver" style="display: none;"></div>
+    </div>
+    <script>
+        const colors = [
+            { name: 'КРАСНЫЙ', value: 'red', class: 'color-red' },
+            { name: 'СИНИЙ', value: 'blue', class: 'color-blue' },
+            { name: 'ЗЕЛЁНЫЙ', value: 'green', class: 'color-green' },
+            { name: 'ЖЁЛТЫЙ', value: 'yellow', class: 'color-yellow' },
+            { name: 'ФИОЛЕТОВЫЙ', value: 'purple', class: 'color-purple' },
+            { name: 'ОРАНЖЕВЫЙ', value: 'orange', class: 'color-orange' },
+            { name: 'РОЗОВЫЙ', value: 'pink', class: 'color-pink' },
+            { name: 'КОРИЧНЕВЫЙ', value: 'brown', class: 'color-brown' },
+            { name: 'ЧЁРНЫЙ', value: 'black', class: 'color-black' },
+            { name: 'СЕРЫЙ', value: 'gray', class: 'color-gray' }
+        ];
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let currentWord = null;
+        let currentColor = null;
+        let timerInterval = null;
+        let correctAnswer = null;
+        let gameMode = 'word';
+        function init() {
+            createButtons();
+            document.getElementById('startBtn').addEventListener('click', startGame);
+            document.getElementById('modeWordBtn').addEventListener('click', () => {
+                setMode('word');
+            });
+            document.getElementById('modeColorBtn').addEventListener('click', () => {
+                setMode('color');
+            });
+        }
+        function setMode(mode) {
+            if (gameActive) return;
+            gameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (mode === 'word') {
+                document.getElementById('modeWordBtn').classList.add('active');
+                document.getElementById('instructions').textContent = 'Нажмите кнопку с цветом, который написан в слове.';
+            } else {
+                document.getElementById('modeColorBtn').classList.add('active');
+                document.getElementById('instructions').textContent = 'Нажмите кнопку, цвет которой соответствует цвету текста (не значению слова).';
+            }
+        }
+        function createButtons() {
+            const grid = document.getElementById('buttonsGrid');
+            grid.innerHTML = '';
+            colors.forEach(color => {
+                const btn = document.createElement('button');
+                btn.className = `цвет-btn ${color.class}`;
+                btn.textContent = color.name;
+                btn.dataset.color = color.value;
+                btn.addEventListener('click', () => handleAnswer(color.value));
+                grid.appendChild(btn);
+            });
+        }
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').textContent = 'Игра идёт...';
+            document.getElementById('gameOver').style.display = 'none';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+            updateScore();
+            updateTime();
+            generateNewWord();
+            startTimer();
+        }
+        function generateNewWord() {
+            if (!gameActive) return;
+            const randomWord = colors[Math.floor(Math.random() * colors.length)];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            currentWord = randomWord.name;
+            currentColor = randomColor.value;
+            if (gameMode === 'word') {
+                correctAnswer = randomWord.value;
+            } else {
+                correctAnswer = randomColor.value;
+            }
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.textContent = currentWord;
+            wordDisplay.style.color = currentColor;
+        }
+        function handleAnswer(selectedColor) {
+            if (!gameActive) return;
+            if (selectedColor === correctAnswer) {
+                score++;
+                updateScore();
+                generateNewWord();
+            } else {
+                const wordDisplay = document.getElementById('wordDisplay');
+                wordDisplay.style.transform = 'масштаб(0,95)';
+                setTimeout(() => {
+                    wordDisplay.style.transform = 'масштаб(1)';
+                }, 150);
+            }
+        }
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+        function updateTime() {
+            document.getElementById('time').textContent = timeLeft.toFixed(1);
+        }
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTime();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 100);
+        }
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').textContent = 'Старт';
+            document.getElementById('wordDisplay').textContent = '';
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('gameOver').textContent = `Игра окончена! Ваш счёт: ${score}`;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр по Теории Музыки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .logo-icon {
+            font-size: 3rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        .nav {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .nav-btn.active {
+            background: #ffd700;
+            color: #1e3c72;
+            border-color: #ffd700;
+        }
+        .section {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .section.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .piano-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .piano-instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .piano {
+            position: relative;
+            height: 200px;
+            margin: 20px auto;
+            max-width: 1000px;
+        }
+        .white-keys {
+            display: flex;
+            position: relative;
+            height: 100%;
+        }
+        .white-key {
+            flex: 1;
+            background: linear-gradient(to bottom, #fff 0%, #f5f5f5 100%);
+            border: 2px solid #ccc;
+            border-radius: 0 0 8px 8px;
+            margin: 0 2px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .white-key:hover {
+            background: linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%);
+        }
+        .white-key.pressed {
+            background: linear-gradient(to bottom, #ffd700 0%, #ffed4e 100%);
+            transform: translateY(2px);
+        }
+        .white-key.marked {
+            box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.8);
+            border-color: #ffd700;
+        }
+        .black-keys {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            display: flex;
+            pointer-events: none;
+        }
+        .black-key-wrapper {
+            flex: 1;
+            position: relative;
+            pointer-events: none;
+        }
+        .black-key {
+            position: absolute;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(to bottom, #333 0%, #000 100%);
+            border: 2px solid #000;
+            border-radius: 0 0 5px 5px;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.1s ease;
+            left: 70%;
+            z-index: 10;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 5px;
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.75rem;
+        }
+        .black-key:hover {
+            background: linear-gradient(to bottom, #555 0%, #222 100%);
+        }
+        .black-key.pressed {
+            background: linear-gradient(to bottom, #ffd700 0%, #ffed4e 100%);
+            transform: translateY(2px);
+        }
+        .black-key.marked {
+            box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.8);
+            border-color: #ffd700;
+        }
+        .piano-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .control-group label {
+            font-weight: 600;
+        }
+        select, button, input[type="range"] {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select option {
+            background: #2a5298;
+            color: #fff;
+        }
+        button {
+            font-weight: 600;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background: #ffd700;
+            color: #1e3c72;
+            border-color: #ffd700;
+        }
+        .btn-primary:hover {
+            background: #ffed4e;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        .labs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .lab {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .lab-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .lab-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .lab-control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .lab-control-row select {
+            flex: 1;
+        }
+        .lab-description {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+        .ear-training {
+            text-align: center;
+        }
+        .ear-exercise {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .exercise-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .exercise-instructions {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .play-button {
+            font-size: 3rem;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #ffd700;
+            color: #1e3c72;
+            border: none;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+        .play-button:active {
+            transform: scale(0.95);
+        }
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .answer-btn {
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .answer-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        .answer-btn.correct {
+            background: #4ade80;
+            border-color: #4ade80;
+        }
+        .answer-btn.incorrect {
+            background: #f87171;
+            border-color: #f87171;
+        }
+        .feedback {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 20px;
+            min-height: 40px;
+        }
+        .feedback.correct {
+            color: #4ade80;
+        }
+        .feedback.incorrect {
+            color: #f87171;
+        }
+        .score {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .piano {
+                height: 150px;
+            }
+            .white-key, .black-key {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">🎵</span>
+                <h1>Тренажёр по Теории Музыки</h1>
+            </div>
+            <p class="subtitle">Изучайте ноты, гаммы и аккорды. Интерактивное пианино + тренировка слуха</p>
+        </div>
+        <div class="nav">
+            <button class="nav-btn active" data-section="piano">Интерактивное Пианино</button>
+            <button class="nav-btn" data-section="scales">Гаммы</button>
+            <button class="nav-btn" data-section="chords">Аккорды</button>
+            <button class="nav-btn" data-section="ear">Тренировка Слуха</button>
+        </div>
+
+        <div class="section active" id="piano-section">
+            <h2 class="section-title">🎹 Интерактивное Пианино</h2>
+            <div class="piano-container">
+                <p class="piano-instructions">
+                    Нажимайте на клавиши или используйте клавиатуру (Z-M для белых клавиш, цифры для чёрных) для игры.
+                    Включите разметку, построив гамму или аккорд ниже.
+                </p>
+                <div class="piano" id="piano"></div>
+                <div class="piano-controls">
+                    <div class="control-group">
+                        <label>Диапазон:</label>
+                        <select id="range">
+                            <option value="C4-C6">С4 - С6</option>
+                            <option value="C3-C5">С3 - С5</option>
+                            <option value="C5-C7">С5 - С7</option>
+                        </select>
+                    </div>
+                    <button id="sustainBtn">Сустейн: Выкл</button>
+                    <button id="clearMarksBtn">Очистить Разметку</button>
+                    <div class="control-group">
+                        <label>Громкость:</label>
+                        <input type="range" id="volume" min="0" max="100" value="70">
+                        <span id="volumeValue">70%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="labs">
+                <div class="lab">
+                    <h3 class="lab-title">Лаборатория Гамм</h3>
+                    <div class="lab-controls">
+                        <div class="lab-control-row">
+                            <label>Тональность:</label>
+                            <select id="scaleRoot">
+                                <option value="C">До (C)</option>
+                                <option value="C#">До# (C#)</option>
+                                <option value="D">Ре (D)</option>
+                                <option value="D#">Ре# (D#)</option>
+                                <option value="E">Ми (E)</option>
+                                <option value="F">Фа (F)</option>
+                                <option value="F#">Фа# (F#)</option>
+                                <option value="G">Соль (G)</option>
+                                <option value="G#">Соль# (G#)</option>
+                                <option value="A">Ля (A)</option>
+                                <option value="A#">Ля# (A#)</option>
+                                <option value="B">Си (B)</option>
+                            </select>
+                        </div>
+                        <div class="lab-control-row">
+                            <label>Тип:</label>
+                            <select id="scaleType">
+                                <option value="major">Мажорная</option>
+                                <option value="minor">Минорная</option>
+                                <option value="pentatonic">Пентатоника</option>
+                                <option value="blues">Блюзовая</option>
+                            </select>
+                        </div>
+                        <div class="lab-control-row">
+                            <button id="markScaleBtn">Разметить</button>
+                            <button class="btn-primary" id="playScaleBtn">Играть Гамму</button>
+                        </div>
+                    </div>
+                    <p class="lab-description">
+                        Размечает клавиши выбранной гаммы и воспроизводит её вверх и вниз.
+                    </p>
+                </div>
+                <div class="lab">
+                    <h3 class="lab-title">Лаборатория Аккордов</h3>
+                    <div class="lab-controls">
+                        <div class="lab-control-row">
+                            <label>Тональность:</label>
+                            <select id="chordRoot">
+                                <option value="C">До (C)</option>
+                                <option value="C#">До# (C#)</option>
+                                <option value="D">Ре (D)</option>
+                                <option value="D#">Ре# (D#)</option>
+                                <option value="E">Ми (E)</option>
+                                <option value="F">Фа (F)</option>
+                                <option value="F#">Фа# (F#)</option>
+                                <option value="G">Соль (G)</option>
+                                <option value="G#">Соль# (G#)</option>
+                                <option value="A">Ля (A)</option>
+                                <option value="A#">Ля# (A#)</option>
+                                <option value="B">Си (B)</option>
+                            </select>
+                        </div>
+                        <div class="lab-control-row">
+                            <label>Качество:</label>
+                            <select id="chordQuality">
+                                <option value="major">Мажорный</option>
+                                <option value="minor">Минорный</option>
+                                <option value="diminished">Уменьшённый</option>
+                                <option value="augmented">Увеличенный</option>
+                                <option value="sus2">Sus2</option>
+                                <option value="sus4">Sus4</option>
+                                <option value="7">Септаккорд</option>
+                                <option value="m7">Минорный септаккорд</option>
+                            </select>
+                        </div>
+                        <div class="lab-control-row">
+                            <button id="markChordBtn">Разметить</button>
+                            <button class="btn-primary" id="playChordBtn">Играть Аккорд</button>
+                        </div>
+                    </div>
+                    <p class="lab-description">
+                        Показывает и воспроизводит аккорд (блоком + арпеджио). Попробуйте разные качества.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="scales-section">
+            <h2 class="section-title">🎼 Гаммы</h2>
+            <div class="piano-container">
+                <div class="piano" id="scales-piano"></div>
+                <div class="piano-controls">
+                    <div class="control-group">
+                        <label>Тональность:</label>
+                        <select id="scalesRoot">
+                            <option value="C">До (C)</option>
+                            <option value="C#">До# (C#)</option>
+                            <option value="D">Ре (D)</option>
+                            <option value="D#">Ре# (D#)</option>
+                            <option value="E">Ми (E)</option>
+                            <option value="F">Фа (F)</option>
+                            <option value="F#">Фа# (F#)</option>
+                            <option value="G">Соль (G)</option>
+                            <option value="G#">Соль# (G#)</option>
+                            <option value="A">Ля (A)</option>
+                            <option value="A#">Ля# (A#)</option>
+                            <option value="B">Си (B)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Тип:</label>
+                        <select id="scalesType">
+                            <option value="major">Мажорная</option>
+                            <option value="minor">Минорная</option>
+                            <option value="pentatonic">Пентатоника</option>
+                            <option value="blues">Блюзовая</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" id="playScalesBtn">Играть Гамму</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="chords-section">
+            <h2 class="section-title">🎹 Аккорды</h2>
+            <div class="piano-container">
+                <div class="piano" id="chords-piano"></div>
+                <div class="piano-controls">
+                    <div class="control-group">
+                        <label>Тональность:</label>
+                        <select id="chordsRoot">
+                            <option value="C">До (C)</option>
+                            <option value="C#">До# (C#)</option>
+                            <option value="D">Ре (D)</option>
+                            <option value="D#">Ре# (D#)</option>
+                            <option value="E">Ми (E)</option>
+                            <option value="F">Фа (F)</option>
+                            <option value="F#">Фа# (F#)</option>
+                            <option value="G">Соль (G)</option>
+                            <option value="G#">Соль# (G#)</option>
+                            <option value="A">Ля (A)</option>
+                            <option value="A#">Ля# (A#)</option>
+                            <option value="B">Си (B)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Качество:</label>
+                        <select id="chordsQuality">
+                            <option value="major">Мажорный</option>
+                            <option value="minor">Минорный</option>
+                            <option value="diminished">Уменьшённый</option>
+                            <option value="augmented">Увеличенный</option>
+                            <option value="sus2">Sus2</option>
+                            <option value="sus4">Sus4</option>
+                            <option value="7">Септаккорд</option>
+                            <option value="m7">Минорный септаккорд</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" id="playChordsBtn">Играть Аккорд</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="ear-section">
+            <h2 class="section-title">👂 Тренировка Слуха</h2>
+            <div class="ear-training">
+                <div class="ear-exercise">
+                    <h3 class="exercise-title">Упражнение: Распознавание Нот</h3>
+                    <p class="exercise-instructions">
+                        Нажмите кнопку воспроизведения, чтобы услышать ноту, затем выберите правильный ответ.
+                    </p>
+                    <button class="play-button" id="playNoteBtn">▶</button>
+                    <div class="answer-options" id="noteOptions"></div>
+                    <div class="feedback" id="noteFeedback"></div>
+                    <div class="score">Правильно: <span id="earScore">0</span> / <span id="earTotal">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let volume = 0.7;
+        let sustain = false;
+        let activeNotes = new Map();
+        const noteFrequencies = {};
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        for (let octave = 0; octave <= 8; octave++) {
+            noteNames.forEach((note, index) => {
+                const frequency = 16.35 * Math.pow(2, octave + index / 12);
+                noteFrequencies[`${note}${octave}`] = frequency;
+            });
+        }
+        function playNote(note, duration = 0.5) {
+            const frequency = noteFrequencies[note];
+            if (!frequency) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+            if (sustain) {
+                gainNode.gain.setValueAtTime(volume, audioContext.currentTime + duration);
+            } else {
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            }
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration + 0.1);
+            if (sustain) {
+                activeNotes.set(note, { oscillator, gainNode });
+            }
+        }
+        function stopNote(note) {
+            const noteData = activeNotes.get(note);
+            if (noteData) {
+                noteData.gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                noteData.oscillator.stop(audioContext.currentTime + 0.1);
+                activeNotes.delete(note);
+            }
+        }
+        function stopAllNotes() {
+            activeNotes.forEach((noteData) => {
+                noteData.gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                noteData.oscillator.stop(audioContext.currentTime + 0.1);
+            });
+            activeNotes.clear();
+        }
+        const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+        function createPiano(containerId, startOctave = 4, endOctave = 6) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const whiteKeysContainer = document.createElement('div');
+            whiteKeysContainer.className = 'white-keys';
+            const blackKeysContainer = document.createElement('div');
+            blackKeysContainer.className = 'black-keys';
+            const keys = [];
+            for (let octave = startOctave; octave <= endOctave; octave++) {
+                whiteKeys.forEach((note, index) => {
+                    const keyNote = `${note}${octave}`;
+                    const key = document.createElement('div');
+                    key.className = 'white-key';
+                    key.dataset.note = keyNote;
+                    key.textContent = keyNote;
+                    key.addEventListener('mousedown', () => {
+                        key.classList.add('pressed');
+                        playNote(keyNote);
+                    });
+                    key.addEventListener('mouseup', () => {
+                        key.classList.remove('pressed');
+                        if (!sustain) stopNote(keyNote);
+                    });
+                    key.addEventListener('mouseleave', () => {
+                        key.classList.remove('pressed');
+                    });
+                    whiteKeysContainer.appendChild(key);
+                    keys.push({ element: key, note: keyNote, isBlack: false });
+                });
+            }
+            for (let octave = startOctave; octave <= endOctave; octave++) {
+                blackKeys.forEach((note, index) => {
+                    if (note) {
+                        const keyNote = `${note}${octave}`;
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'black-key-wrapper';
+                        const key = document.createElement('div');
+                        key.className = 'black-key';
+                        key.dataset.note = keyNote;
+                        key.textContent = keyNote;
+                        key.addEventListener('mousedown', () => {
+                            key.classList.add('pressed');
+                            playNote(keyNote);
+                        });
+                        key.addEventListener('mouseup', () => {
+                            key.classList.remove('pressed');
+                            if (!sustain) stopNote(keyNote);
+                        });
+                        key.addEventListener('mouseleave', () => {
+                            key.classList.remove('pressed');
+                        });
+                        wrapper.appendChild(key);
+                        blackKeysContainer.appendChild(wrapper);
+                        keys.push({ element: key, note: keyNote, isBlack: true });
+                    } else {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'black-key-wrapper';
+                        blackKeysContainer.appendChild(wrapper);
+                    }
+                });
+            }
+            container.appendChild(whiteKeysContainer);
+            container.appendChild(blackKeysContainer);
+            return keys;
+        }
+        let pianoKeys = createPiano('piano', 4, 6);
+        let scalesPianoKeys = createPiano('scales-piano', 4, 6);
+        let chordsPianoKeys = createPiano('chords-piano', 4, 6);
+        const keyboardMap = {
+            'z': 'C4', 's': 'C#4', 'x': 'D4', 'd': 'D#4', 'c': 'E4',
+            'v': 'F4', 'g': 'F#4', 'b': 'G4', 'h': 'G#4', 'n': 'A4',
+            'j': 'A#4', 'm': 'B4',
+            'q': 'C5', '2': 'C#5', 'w': 'D5', '3': 'D#5', 'e': 'E5',
+            'r': 'F5', '5': 'F#5', 't': 'G5', '6': 'G#5', 'y': 'A5',
+            '7': 'A#5', 'u': 'B5', 'i': 'C6'
+        };
+        document.addEventListener('keydown', (e) => {
+            const note = keyboardMap[e.key.toLowerCase()];
+            if (note) {
+                const key = pianoKeys.find(k => k.note === note);
+                if (key && !key.element.classList.contains('pressed')) {
+                    key.element.classList.add('pressed');
+                    playNote(note);
+                }
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            const note = keyboardMap[e.key.toLowerCase()];
+            if (note) {
+                const key = pianoKeys.find(k => k.note === note);
+                if (key) {
+                    key.element.classList.remove('pressed');
+                    if (!sustain) stopNote(note);
+                }
+            }
+        });
+        const scales = {
+            major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10],
+            pentatonic: [0, 2, 4, 7, 9],
+            blues: [0, 3, 5, 6, 7, 10]
+        };
+        function getScaleNotes(root, type) {
+            const rootIndex = noteNames.indexOf(root);
+            const intervals = scales[type];
+            return intervals.map(interval => {
+                const noteIndex = (rootIndex + interval) % 12;
+                return noteNames[noteIndex];
+            });
+        }
+        function markScale(root, type, pianoKeys) {
+            clearMarks(pianoKeys);
+            const scaleNotes = getScaleNotes(root, type);
+            pianoKeys.forEach(key => {
+                const noteName = key.note.replace(/\d+/, '');
+                if (scaleNotes.includes(noteName)) {
+                    key.element.classList.add('marked');
+                }
+            });
+        }
+        function playScale(root, type) {
+            const scaleNotes = getScaleNotes(root, type);
+            const notes = [];
+            for (let octave = 4; octave <= 5; octave++) {
+                scaleNotes.forEach(note => {
+                    notes.push(`${note}${octave}`);
+                });
+            }
+            notes.push(`${root}6`);
+            notes.forEach((note, index) => {
+                setTimeout(() => {
+                    playNote(note, 0.3);
+                }, index * 300);
+            });
+            setTimeout(() => {
+                [...notes].reverse().forEach((note, index) => {
+                    setTimeout(() => {
+                        playNote(note, 0.3);
+                    }, index * 300);
+                });
+            }, notes.length * 300);
+        }
+        const chords = {
+            major: [0, 4, 7],
+            minor: [0, 3, 7],
+            diminished: [0, 3, 6],
+            augmented: [0, 4, 8],
+            sus2: [0, 2, 7],
+            sus4: [0, 5, 7],
+            '7': [0, 4, 7, 10],
+            'm7': [0, 3, 7, 10]
+        };
+        function getChordNotes(root, quality) {
+            const rootIndex = noteNames.indexOf(root);
+            const intervals = chords[quality];
+            return intervals.map(interval => {
+                const noteIndex = (rootIndex + interval) % 12;
+                return noteNames[noteIndex];
+            });
+        }
+        function markChord(root, quality, pianoKeys) {
+            clearMarks(pianoKeys);
+            const chordNotes = getChordNotes(root, quality);
+            pianoKeys.forEach(key => {
+                const noteName = key.note.replace(/\d+/, '');
+                if (chordNotes.includes(noteName)) {
+                    key.element.classList.add('marked');
+                }
+            });
+        }
+        function playChord(root, quality) {
+            const chordNotes = getChordNotes(root, quality);
+            const notes = chordNotes.map(note => `${note}4`);
+            notes.forEach(note => {
+                playNote(note, 1);
+            });
+            setTimeout(() => {
+                notes.forEach((note, index) => {
+                    setTimeout(() => {
+                        playNote(note, 0.4);
+                    }, index * 200);
+                });
+            }, 1200);
+        }
+        function clearMarks(pianoKeys) {
+            pianoKeys.forEach(key => {
+                key.element.classList.remove('marked');
+            });
+        }
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                btn.classList.add('active');
+                const section = btn.dataset.section;
+                document.getElementById(`${section}-раздел`).classList.add('active');
+            });
+        });
+        document.getElementById('sustainBtn').addEventListener('click', () => {
+            sustain = !sustain;
+            document.getElementById('sustainBtn').textContent = `Сустейн: ${sustain ? 'Вкл' : 'Выкл'}`;
+            if (!sustain) stopAllNotes();
+        });
+        document.getElementById('clearMarksBtn').addEventListener('click', () => {
+            clearMarks(pianoKeys);
+        });
+        document.getElementById('volume').addEventListener('input', (e) => {
+            volume = e.target.value / 100;
+            document.getElementById('volumeValue').textContent = e.target.value + '%';
+        });
+        document.getElementById('markScaleBtn').addEventListener('click', () => {
+            const root = document.getElementById('scaleRoot').value;
+            const type = document.getElementById('scaleType').value;
+            markScale(root, type, pianoKeys);
+        });
+        document.getElementById('playScaleBtn').addEventListener('click', () => {
+            const root = document.getElementById('scaleRoot').value;
+            const type = document.getElementById('scaleType').value;
+            playScale(root, type);
+        });
+        document.getElementById('markChordBtn').addEventListener('click', () => {
+            const root = document.getElementById('chordRoot').value;
+            const quality = document.getElementById('chordQuality').value;
+            markChord(root, quality, pianoKeys);
+        });
+        document.getElementById('playChordBtn').addEventListener('click', () => {
+            const root = document.getElementById('chordRoot').value;
+            const quality = document.getElementById('chordQuality').value;
+            playChord(root, quality);
+        });
+        document.getElementById('playScalesBtn').addEventListener('click', () => {
+            const root = document.getElementById('scalesRoot').value;
+            const type = document.getElementById('scalesType').value;
+            markScale(root, type, scalesPianoKeys);
+            playScale(root, type);
+        });
+        document.getElementById('playChordsBtn').addEventListener('click', () => {
+            const root = document.getElementById('chordsRoot').value;
+            const quality = document.getElementById('chordsQuality').value;
+            markChord(root, quality, chordsPianoKeys);
+            playChord(root, quality);
+        });
+        let currentNote = null;
+        let earScore = 0;
+        let earTotal = 0;
+        function generateEarExercise() {
+            const randomNote = noteNames[Math.floor(Math.random() * 12)];
+            const randomOctave = 4;
+            currentNote = `${randomNote}${randomOctave}`;
+            const options = [randomNote];
+            while (options.length < 4) {
+                const option = noteNames[Math.floor(Math.random() * 12)];
+                if (!options.includes(option)) {
+                    options.push(option);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+            const optionsContainer = document.getElementById('noteOptions');
+            optionsContainer.innerHTML = '';
+            options.forEach(note => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = note;
+                btn.addEventListener('click', () => checkEarAnswer(note));
+                optionsContainer.appendChild(btn);
+            });
+            document.getElementById('noteFeedback').textContent = '';
+            document.getElementById('noteFeedback').className = 'feedback';
+        }
+        function checkEarAnswer(selectedNote) {
+            earTotal++;
+            const correctNote = currentNote.replace(/\d+/, '');
+            const isCorrect = selectedNote === correctNote;
+            if (isCorrect) {
+                earScore++;
+            }
+            document.querySelectorAll('.answer-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === correctNote) {
+                    btn.classList.add('correct');
+                } else if (btn.textContent === selectedNote && !isCorrect) {
+                    btn.classList.add('incorrect');
+                }
+            });
+            const feedback = document.getElementById('noteFeedback');
+            feedback.textContent = isCorrect ? 'Правильно! ✓' : `Неправильно! Правильный ответ: ${correctNote}`;
+            feedback.className = `отзыв ${isCorrect ? 'correct' : 'incorrect'}`;
+            document.getElementById('earScore').textContent = earScore;
+            document.getElementById('earTotal').textContent = earTotal;
+            setTimeout(() => {
+                generateEarExercise();
+            }, 2000);
+        }
+        document.getElementById('playNoteBtn').addEventListener('click', () => {
+            if (currentNote) {
+                playNote(currentNote, 1);
+            } else {
+                generateEarExercise();
+            }
+        });
+        generateEarExercise();
+    </script>
+</body>
+</html>

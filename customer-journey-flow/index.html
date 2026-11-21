@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поток Путешествия Клиента</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            background: #f0f0f0;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #f8f8f8;
+            border-color: #bbb;
+        }
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 10px;
+            padding: 4px 12px;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+        .zoom-controls label {
+            font-size: 0.85em;
+            color: #666;
+        }
+        .zoom-controls input {
+            width: 80px;
+            margin: 0 5px;
+        }
+        .zoom-btn {
+            padding: 4px 10px;
+            font-size: 0.9em;
+        }
+        .tip {
+            color: #666;
+            font-size: 0.85em;
+            margin-left: 20px;
+        }
+        .canvas-wrapper {
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow: auto;
+            position: relative;
+        }
+        .canvas {
+            position: relative;
+            background-image:
+                linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-width: 2000px;
+            min-height: 2000px;
+            transform-origin: 0 0;
+        }
+        .stage {
+            position: absolute;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: move;
+            user-select: none;
+        }
+        .stage.dragging {
+            opacity: 0.8;
+            z-index: 1000;
+        }
+        .stage-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            outline: none;
+            border: 2px solid transparent;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .stage-title:focus {
+            border-color: #3b82f6;
+            background: #f0f7ff;
+        }
+        .stage-subtitle {
+            font-size: 0.85em;
+            color: #666;
+        }
+        .handle {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: crosshair;
+            z-index: 10;
+        }
+        .handle.left {
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .handle.right {
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .handle:hover {
+            background: #2563eb;
+            transform: translateY(-50%) scale(1.2);
+        }
+        .connection {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .connection-line {
+            stroke: #333;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        .instruction-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #666;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Поток Путешествия Клиента</div>
+        <div class="controls">
+            <button class="btn" id="addStageBtn">Добавить Этап</button>
+            <button class="btn" id="autoLayoutBtn">Авто-раскладка</button>
+            <button class="btn" id="exportBtn">Экспорт JSON</button>
+            <button class="btn" id="resetBtn">Сброс</button>
+            <div class="zoom-controls">
+                <label>Масштаб:</label>
+                <button class="btn zoom-btn" id="zoomOutBtn">-</button>
+                <input type="range" id="zoomSlider" min="25" max="200" value="100">
+                <button class="btn zoom-btn" id="zoomInBtn">+</button>
+                <span id="zoomValue">100%</span>
+            </div>
+            <span class="tip">Подсказка: перетащите ручку между этапами для соединения. Двойной клик по заголовку для редактирования.</span>
+        </div>
+    </div>
+    <div class="canvas-wrapper" id="canvasWrapper">
+        <div class="canvas" id="canvas">
+        <svg id="connectionsSvg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#333" />
+                </marker>
+            </defs>
+        </svg>
+        </div>
+    </div>
+    <script>
+        let stages = [];
+        let connections = [];
+        let draggingStage = null;
+        let draggingHandle = null;
+        let connectingFrom = null;
+        let dragOffset = { x: 0, y: 0 };
+        let stageIdCounter = 0;
+        let zoomLevel = 100;
+        const defaultStages = [
+            { id: 1, title: 'Осведомленность', subtitle: 'Этап в путешествии', x: 150, y: 100 },
+            { id: 2, title: 'Рассмотрение', subtitle: 'Этап в путешествии', x: 400, y: 250 },
+            { id: 3, title: 'Покупка', subtitle: 'Этап в путешествии', x: 650, y: 150 }
+        ];
+        const defaultConnections = [
+            { from: 1, to: 2 },
+            { from: 2, to: 3 }
+        ];
+        function init() {
+            stageIdCounter = 3;
+            loadDefaultStages();
+            setupEventListeners();
+        }
+        function loadDefaultStages() {
+            stages = defaultStages.map(s => ({ ...s }));
+            connections = defaultConnections.map(c => ({ ...c }));
+            renderStages();
+            renderConnections();
+        }
+        function setupEventListeners() {
+            document.getElementById('addStageBtn').addEventListener('click', addStage);
+            document.getElementById('autoLayoutBtn').addEventListener('click', autoLayout);
+            document.getElementById('exportBtn').addEventListener('click', exportJSON);
+            document.getElementById('resetBtn').addEventListener('click', reset);
+            const zoomSlider = document.getElementById('zoomSlider');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const zoomValue = document.getElementById('zoomValue');
+            zoomSlider.addEventListener('input', (e) => {
+                zoomLevel = parseInt(e.target.value);
+                updateZoom();
+                zoomValue.textContent = zoomLevel + '%';
+            });
+            zoomInBtn.addEventListener('click', () => {
+                zoomLevel = Math.min(200, zoomLevel + 10);
+                zoomSlider.value = zoomLevel;
+                updateZoom();
+                zoomValue.textContent = zoomLevel + '%';
+            });
+            zoomOutBtn.addEventListener('click', () => {
+                zoomLevel = Math.max(25, zoomLevel - 10);
+                zoomSlider.value = zoomLevel;
+                updateZoom();
+                zoomValue.textContent = zoomLevel + '%';
+            });
+            const canvas = document.getElementById('canvas');
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+        }
+        function updateZoom() {
+            const canvas = document.getElementById('canvas');
+            canvas.style.transform = `масштаб(${zoomLevel / 100})`;
+        }
+        function addStage() {
+            const newStage = {
+                id: ++stageIdCounter,
+                title: 'Новый Этап',
+                subtitle: 'Этап в путешествии',
+                x: Math.random() * 500 + 200,
+                y: Math.random() * 300 + 150
+            };
+            stages.push(newStage);
+            renderStages();
+        }
+        function createStageElement(stage) {
+            const stageEl = document.createElement('div');
+            stageEl.className = 'stage';
+            stageEl.dataset.id = stage.id;
+            stageEl.style.left = stage.x + 'px';
+            stageEl.style.top = stage.y + 'px';
+            const title = document.createElement('div');
+            title.className = 'stage-title';
+            title.contentEditable = true;
+            title.textContent = stage.title;
+            title.addEventListener('blur', (e) => {
+                stage.title = e.target.textContent;
+            });
+            title.addEventListener('dblclick', (e) => {
+                e.target.focus();
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            });
+            const subtitle = document.createElement('div');
+            subtitle.className = 'stage-subtitle';
+            subtitle.textContent = stage.subtitle;
+            const leftHandle = document.createElement('div');
+            leftHandle.className = 'ручка слева';
+            leftHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                startConnecting(stage.id, 'left');
+            });
+            const rightHandle = document.createElement('div');
+            rightHandle.className = 'обращаться правильно';
+            rightHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                startConnecting(stage.id, 'right');
+            });
+            stageEl.appendChild(title);
+            stageEl.appendChild(subtitle);
+            stageEl.appendChild(leftHandle);
+            stageEl.appendChild(rightHandle);
+            stageEl.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('handle') || e.target.classList.contains('stage-title')) return;
+                startDragging(stage.id, e);
+            });
+            return stageEl;
+        }
+        function renderStages() {
+            const canvas = document.getElementById('canvas');
+            const existingStages = canvas.querySelectorAll('.stage');
+            existingStages.forEach(s => s.remove());
+            stages.forEach(stage => {
+                const stageEl = createStageElement(stage);
+                canvas.appendChild(stageEl);
+            });
+        }
+        function startDragging(stageId, e) {
+            const stage = stages.find(s => s.id === stageId);
+            if (!stage) return;
+            draggingStage = stage;
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const scale = zoomLevel / 100;
+            dragOffset.x = (e.clientX - rect.left) / scale - stage.x;
+            dragOffset.y = (e.clientY - rect.top) / scale - stage.y;
+            const stageEl = document.querySelector(`[data-id="${stageId}"]`);
+            if (stageEl) {
+                stageEl.classList.add('dragging');
+            }
+        }
+        function startConnecting(stageId, side) {
+            connectingFrom = { id: stageId, side };
+            const canvas = document.getElementById('canvas');
+            canvas.style.cursor = 'crosshair';
+        }
+        function handleMouseMove(e) {
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / (zoomLevel / 100);
+            const y = (e.clientY - rect.top) / (zoomLevel / 100);
+            if (draggingStage) {
+                draggingStage.x = x - dragOffset.x;
+                draggingStage.y = y - dragOffset.y;
+                const stageEl = document.querySelector(`[data-id="${draggingStage.id}"]`);
+                if (stageEl) {
+                    stageEl.style.left = draggingStage.x + 'px';
+                    stageEl.style.top = draggingStage.y + 'px';
+                }
+                renderConnections();
+            } else if (connectingFrom) {
+                const stage = stages.find(s => s.id === connectingFrom.id);
+                if (stage) {
+                    const handleX = connectingFrom.side === 'left' ? stage.x : stage.x + 200;
+                    const handleY = stage.y + 40;
+                    const stageEl = document.elementFromPoint(e.clientX, e.clientY);
+                    if (stageEl && stageEl.classList.contains('handle')) {
+                        const targetStageEl = stageEl.closest('.stage');
+                        if (targetStageEl) {
+                            const targetId = parseInt(targetStageEl.dataset.id);
+                            if (targetId !== connectingFrom.id) {
+                                const targetStage = stages.find(s => s.id === targetId);
+                                if (targetStage) {
+                                    const targetHandleX = stageEl.classList.contains('left')
+                                        ? targetStage.x : targetStage.x + 200;
+                                    const targetHandleY = targetStage.y + 40;
+                                    drawTemporaryConnection(handleX, handleY, targetHandleX, targetHandleY);
+                                }
+                            }
+                        }
+                    } else {
+                        drawTemporaryConnection(handleX, handleY, x, y);
+                    }
+                }
+            }
+        }
+        function drawTemporaryConnection(x1, y1, x2, y2) {
+            const svg = document.getElementById('connectionsSvg');
+            let tempLine = svg.querySelector('.temp-connection');
+            if (!tempLine) {
+                tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                tempLine.classList.add('temp-connection');
+                tempLine.setAttribute('stroke', '#3b82f6');
+                tempLine.setAttribute('stroke-width', '2');
+                tempLine.setAttribute('fill', 'none');
+                tempLine.setAttribute('stroke-dasharray', '5,5');
+                svg.appendChild(tempLine);
+            }
+            const path = createCurvedPath(x1, y1, x2, y2);
+            tempLine.setAttribute('d', path);
+        }
+        function handleMouseUp(e) {
+            if (draggingStage) {
+                const stageEl = document.querySelector(`[data-id="${draggingStage.id}"]`);
+                if (stageEl) {
+                    stageEl.classList.remove('dragging');
+                }
+                draggingStage = null;
+            }
+            if (connectingFrom) {
+                const stageEl = document.elementFromPoint(e.clientX, e.clientY);
+                if (stageEl && stageEl.classList.contains('handle')) {
+                    const targetStageEl = stageEl.closest('.stage');
+                    if (targetStageEl) {
+                        const targetId = parseInt(targetStageEl.dataset.id);
+                        if (targetId !== connectingFrom.id) {
+                            const targetSide = stageEl.classList.contains('left') ? 'left' : 'right';
+                            if (connectingFrom.side === 'right' && targetSide === 'left') {
+                                addConnection(connectingFrom.id, targetId);
+                            }
+                        }
+                    }
+                }
+                const svg = document.getElementById('connectionsSvg');
+                const tempLine = svg.querySelector('.temp-connection');
+                if (tempLine) tempLine.remove();
+                connectingFrom = null;
+                const canvas = document.getElementById('canvas');
+                canvas.style.cursor = 'default';
+            }
+        }
+        function addConnection(fromId, toId) {
+            if (connections.some(c => c.from === fromId && c.to === toId)) return;
+            connections.push({ from: fromId, to: toId });
+            renderConnections();
+        }
+        function createCurvedPath(x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const controlX1 = x1 + dx * 0.5;
+            const controlY1 = y1;
+            const controlX2 = x2 - dx * 0.5;
+            const controlY2 = y2;
+            return `M ${x1} ${y1} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${x2} ${y2}`;
+        }
+        function renderConnections() {
+            const svg = document.getElementById('connectionsSvg');
+            const existingConnections = svg.querySelectorAll('.connection-line: not(.temp-connection)');
+            existingConnections.forEach(c => c.remove());
+            connections.forEach(conn => {
+                const fromStage = stages.find(s => s.id === conn.from);
+                const toStage = stages.find(s => s.id === conn.to);
+                if (!fromStage || !toStage) return;
+                const x1 = fromStage.x + 200;
+                const y1 = fromStage.y + 40;
+                const x2 = toStage.x;
+                const y2 = toStage.y + 40;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.classList.add('connection-line');
+                path.setAttribute('d', createCurvedPath(x1, y1, x2, y2));
+                svg.appendChild(path);
+            });
+        }
+        function autoLayout() {
+            if (stages.length === 0) return;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const radius = Math.min(window.innerWidth, window.innerHeight) / 3;
+            const angleStep = (2 * Math.PI) / stages.length;
+            stages.forEach((stage, index) => {
+                const angle = index * angleStep;
+                stage.x = centerX + Math.cos(angle) * radius - 100;
+                stage.y = centerY + Math.sin(angle) * radius - 40;
+            });
+            renderStages();
+            renderConnections();
+        }
+        function exportJSON() {
+            const data = {
+                stages: stages.map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    subtitle: s.subtitle,
+                    x: s.x,
+                    y: s.y
+                })),
+                connections: connections
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'customer-journey.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        function reset() {
+            if (confirm('Вы уверены, что хотите сбросить все этапы и соединения?')) {
+                stages = [];
+                connections = [];
+                stageIdCounter = 0;
+                renderStages();
+                renderConnections();
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

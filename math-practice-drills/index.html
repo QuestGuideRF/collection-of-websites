@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировка по Математике</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        .container {
+            background: #2a2a2a;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid #3a3a3a;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .settings {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+        select, button {
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 1px solid #3a3a3a;
+            border-radius: 10px;
+            background: #1f1f1f;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select {
+            background: #1f1f1f;
+        }
+        select:hover, button:hover {
+            background: #2a2a2a;
+            border-color: #4a4a4a;
+            transform: translateY(-2px);
+        }
+        select:focus {
+            outline: none;
+            border-color: #5a5a5a;
+            background: #2a2a2a;
+        }
+        select option {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            padding: 10px;
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            background: #1f1f1f;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+            margin-top: 5px;
+        }
+        .quiz-area {
+            display: none;
+        }
+        .quiz-area.active {
+            display: block;
+        }
+        .problem {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .problem-text {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .answer-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 2rem;
+            text-align: center;
+            border: 3px solid #3a3a3a;
+            border-radius: 10px;
+            background: #1f1f1f;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .answer-input:focus {
+            outline: none;
+            border-color: #5a5a5a;
+            background: #2a2a2a;
+        }
+        .answer-input::placeholder {
+            color: #666;
+        }
+        .timer {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+        .timer.warning {
+            color: #ffd700;
+        }
+        .timer.danger {
+            color: #ff4444;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .feedback {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            min-height: 30px;
+            font-weight: 600;
+        }
+        .feedback.correct {
+            color: #4ade80;
+        }
+        .feedback.incorrect {
+            color: #f87171;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .btn-primary {
+            background: #4a9eff;
+            flex: 1;
+            font-weight: 600;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #5aaeff;
+        }
+        .btn-secondary {
+            background: #f87171;
+            flex: 1;
+            font-weight: 600;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: #ff8181;
+        }
+        .start-screen {
+            text-align: center;
+        }
+        .start-screen.hidden {
+            display: none;
+        }
+        .btn-start {
+            background: #4a9eff;
+            padding: 20px 40px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            width: 100%;
+            border: none;
+        }
+        .btn-start:hover {
+            background: #5aaeff;
+        }
+        .results {
+            display: none;
+            text-align: center;
+        }
+        .results.active {
+            display: block;
+        }
+        .results h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .results-stats {
+            background: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
+        }
+        .results-stats p {
+            font-size: 1.3rem;
+            margin: 10px 0;
+        }
+        .results-stats .highlight {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Тренировка по Математике</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <span>Правильно</span>
+                <span class="stat-value" id="correctCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Неправильно</span>
+                <span class="stat-value" id="incorrectCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Точность</span>
+                <span class="stat-value" id="accuracy">0%</span>
+            </div>
+        </div>
+        <div class="start-screen" id="startScreen">
+            <div class="settings">
+                <div class="setting-group">
+                    <label for="difficulty">Уровень сложности:</label>
+                    <select id="difficulty">
+                        <option value="easy">Лёгкий (сложение/вычитание до 20)</option>
+                        <option value="medium">Средний (сложение/вычитание до 100)</option>
+                        <option value="hard">Сложный (умножение/деление до 12)</option>
+                        <option value="expert">Эксперт (смешанные операции до 100)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="timeLimit">Время на задачу (секунды):</label>
+                    <select id="timeLimit">
+                        <option value="5">5 секунд</option>
+                        <option value="10" selected>10 секунд</option>
+                        <option value="15">15 секунд</option>
+                        <option value="20">20 секунд</option>
+                        <option value="30">30 секунд</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-start" id="startBtn">Начать тренировку</button>
+        </div>
+        <div class="quiz-area" id="quizArea">
+            <div class="timer" id="timer">10</div>
+            <div class="problem">
+                <div class="problem-text" id="problemText">2 + 2 = ?</div>
+                <input type="number" class="answer-input" id="answerInput" placeholder="Введите ответ" autofocus>
+            </div>
+            <div class="feedback" id="feedback"></div>
+            <div class="controls">
+                <button class="btn-secondary" id="stopBtn">Остановить</button>
+            </div>
+        </div>
+        <div class="results" id="results">
+            <h2>Результаты тренировки</h2>
+            <div class="results-stats">
+                <p>Правильных ответов: <span class="highlight" id="finalCorrect">0</span></p>
+                <p>Неправильных ответов: <span class="highlight" id="finalIncorrect">0</span></p>
+                <p>Точность: <span class="highlight" id="finalAccuracy">0%</span></p>
+                <p>Всего задач: <span class="highlight" id="totalProblems">0</span></p>
+            </div>
+            <button class="btn-start" id="restartBtn">Начать заново</button>
+        </div>
+    </div>
+    <script>
+        let currentProblem = null;
+        let correctAnswer = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let timer = null;
+        let timeLeft = 10;
+        let difficulty = 'medium';
+        let timeLimit = 10;
+        let isActive = false;
+        const startScreen = document.getElementById('startScreen');
+        const quizArea = document.getElementById('quizArea');
+        const results = document.getElementById('results');
+        const problemText = document.getElementById('problemText');
+        const answerInput = document.getElementById('answerInput');
+        const timerDisplay = document.getElementById('timer');
+        const feedback = document.getElementById('feedback');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const difficultySelect = document.getElementById('difficulty');
+        const timeLimitSelect = document.getElementById('timeLimit');
+        const correctCountDisplay = document.getElementById('correctCount');
+        const incorrectCountDisplay = document.getElementById('incorrectCount');
+        const accuracyDisplay = document.getElementById('accuracy');
+        function generateProblem() {
+            let num1, num2, operation, answer;
+            switch(difficulty) {
+                case 'easy':
+                    num1 = Math.floor(Math.random() * 20) + 1;
+                    num2 = Math.floor(Math.random() * 20) + 1;
+                    operation = Math.random() > 0.5 ? '+' : '-';
+                    if (operation === '-') {
+                        if (num1 < num2) [num1, num2] = [num2, num1];
+                    }
+                    answer = operation === '+' ? num1 + num2 : num1 - num2;
+                    break;
+                case 'medium':
+                    num1 = Math.floor(Math.random() * 100) + 1;
+                    num2 = Math.floor(Math.random() * 100) + 1;
+                    operation = Math.random() > 0.5 ? '+' : '-';
+                    if (operation === '-') {
+                        if (num1 < num2) [num1, num2] = [num2, num1];
+                    }
+                    answer = operation === '+' ? num1 + num2 : num1 - num2;
+                    break;
+                case 'hard':
+                    num1 = Math.floor(Math.random() * 12) + 1;
+                    num2 = Math.floor(Math.random() * 12) + 1;
+                    operation = Math.random() > 0.5 ? '×' : '÷';
+                    if (operation === '÷') {
+                        answer = num1;
+                        num1 = num1 * num2;
+                    } else {
+                        answer = num1 * num2;
+                    }
+                    break;
+                case 'expert':
+                    num1 = Math.floor(Math.random() * 100) + 1;
+                    num2 = Math.floor(Math.random() * 100) + 1;
+                    const operations = ['+', '-', '×'];
+                    operation = operations[Math.floor(Math.random() * operations.length)];
+                    if (operation === '+') {
+                        answer = num1 + num2;
+                    } else if (operation === '-') {
+                        if (num1 < num2) [num1, num2] = [num2, num1];
+                        answer = num1 - num2;
+                    } else {
+                        num1 = Math.floor(Math.random() * 12) + 1;
+                        num2 = Math.floor(Math.random() * 12) + 1;
+                        answer = num1 * num2;
+                    }
+                    break;
+            }
+            problemText.textContent = `${num1} ${operation} ${num2} = ?`;
+            correctAnswer = answer;
+            answerInput.value = '';
+            answerInput.focus();
+            feedback.textContent = '';
+            feedback.className = 'feedback';
+        }
+        function updateStats() {
+            correctCountDisplay.textContent = correctCount;
+            incorrectCountDisplay.textContent = incorrectCount;
+            const total = correctCount + incorrectCount;
+            const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+            accuracyDisplay.textContent = accuracy + '%';
+        }
+        function startTimer() {
+            timeLeft = timeLimit;
+            timerDisplay.textContent = timeLeft;
+            timerDisplay.className = 'timer';
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 3) {
+                    timerDisplay.className = 'часы опасности';
+                } else if (timeLeft <= timeLimit * 0.3) {
+                    timerDisplay.className = 'предупреждение таймера';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+        function handleTimeout() {
+            incorrectCount++;
+            updateStats();
+            feedback.textContent = `Время вышло! Правильный ответ: ${correctAnswer}`;
+            feedback.className = 'отзыв неверный';
+            setTimeout(() => {
+                if (isActive) {
+                    generateProblem();
+                    startTimer();
+                }
+            }, 2000);
+        }
+        function checkAnswer() {
+            if (!isActive) return;
+            const userAnswer = parseInt(answerInput.value);
+            if (isNaN(userAnswer)) {
+                return;
+            }
+            clearInterval(timer);
+            if (userAnswer === correctAnswer) {
+                correctCount++;
+                feedback.textContent = 'Правильно! ✓';
+                feedback.className = 'обратная связь правильная';
+            } else {
+                incorrectCount++;
+                feedback.textContent = `Неправильно! Правильный ответ: ${correctAnswer}`;
+                feedback.className = 'отзыв неверный';
+            }
+            updateStats();
+            setTimeout(() => {
+                if (isActive) {
+                    generateProblem();
+                    startTimer();
+                }
+            }, 1500);
+        }
+        function startQuiz() {
+            difficulty = difficultySelect.value;
+            timeLimit = parseInt(timeLimitSelect.value);
+            correctCount = 0;
+            incorrectCount = 0;
+            isActive = true;
+            startScreen.classList.add('hidden');
+            quizArea.classList.add('active');
+            results.classList.remove('active');
+            updateStats();
+            generateProblem();
+            startTimer();
+        }
+        function stopQuiz() {
+            isActive = false;
+            clearInterval(timer);
+            const total = correctCount + incorrectCount;
+            const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+            document.getElementById('finalCorrect').textContent = correctCount;
+            document.getElementById('finalIncorrect').textContent = incorrectCount;
+            document.getElementById('finalAccuracy').textContent = accuracy + '%';
+            document.getElementById('totalProblems').textContent = total;
+            quizArea.classList.remove('active');
+            results.classList.add('active');
+        }
+        startBtn.addEventListener('click', startQuiz);
+        stopBtn.addEventListener('click', stopQuiz);
+        restartBtn.addEventListener('click', () => {
+            results.classList.remove('active');
+            startScreen.classList.remove('hidden');
+        });
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        answerInput.addEventListener('input', () => {
+            if (isActive && answerInput.value !== '') {
+                const userAnswer = parseInt(answerInput.value);
+                if (!isNaN(userAnswer) && userAnswer === correctAnswer) {
+                    setTimeout(() => checkAnswer(), 100);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
